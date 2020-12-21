@@ -143,7 +143,7 @@ class SeminarViewSet(viewsets.GenericViewSet):
                         return Response({'error': "The instructor should get 'participant' role first."},
                                         status=status.HTTP_403_FORBIDDEN)
 
-                    if not UserSeminar.objects.filter(role=UserSeminar.PARTICIPANT, user_id=user.id).exists():
+                    if not user.seminars.filter(role=UserSeminar.PARTICIPANT, seminar=seminar).exists():
                         UserSeminar.objects.create(user=user, seminar=seminar, role="participant")
                         participant = ParticipantProfile.objects.get(user=user)
                     else:
@@ -172,22 +172,27 @@ class SeminarViewSet(viewsets.GenericViewSet):
             seminar = self.get_object()
             try:
                 if user.participant:
-                    participant = user.seminars.filter(seminar_id=seminar.id, role="participant").last()
+                    participant_seminar = user.seminars.filter(seminar=seminar, role=UserSeminar.PARTICIPANT).last()
 
-                    if participant is None:
+                    if participant_seminar is None:
                         try:
-                            if user.instructor.charge_id == seminar.id:
+                            if user.instructor.charge_id != seminar.id:
+                                return Response({'error': "You've never enrolled this seminar."},
+                                                status=status.HTTP_400_BAD_REQUEST)
+                            else:
                                 return Response({'error': "The instructor cannot drop the seminar"},
                                                 status=status.HTTP_403_FORBIDDEN)
-                            else:
-                                Response({'error': "You've never enrolled this seminar."},
-                                         status=status.HTTP_400_BAD_REQUEST)
+
                         except ObjectDoesNotExist:
                             return Response({'error': "You've never enrolled this seminar."},
                                             status=status.HTTP_400_BAD_REQUEST)
-                    participant.is_active = False
-                    participant.dropped_at = timezone.now()
-                    participant.save()
+                    if participant_seminar.is_active:
+                        participant_seminar.is_active = False
+                        participant_seminar.dropped_at = timezone.now()
+                        participant_seminar.save()
+                    else:
+                        return Response({'error': "You've already dropped this seminar."},
+                                        status=status.HTTP_400_BAD_REQUEST)
 
             except ObjectDoesNotExist:
                 return Response({'error': "The instructor cannot drop the seminar."},

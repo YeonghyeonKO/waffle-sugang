@@ -302,7 +302,7 @@ class PutUserMeTestCase(TestCase):
             json.dumps({
                 "username": "inst123",
                 "email": "bdv111@naver.com",
-                "company": "매스프레소",
+                "company": "Mathpresso",
                 "year": -1
             }),
             content_type='application/json',

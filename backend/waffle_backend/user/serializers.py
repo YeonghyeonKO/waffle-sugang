@@ -1,6 +1,5 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
@@ -20,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
     participant = serializers.SerializerMethodField()
     role = serializers.ChoiceField(choices=UserSeminar.ROLES, write_only=True)
     company = serializers.CharField(allow_blank=True, required=False, write_only=True)
-    year = serializers.IntegerField(required=False, write_only=True, validators=[MinValueValidator(0)])
+    year = serializers.CharField(allow_blank=True, required=False, write_only=True)
     university = serializers.CharField(allow_blank=True, required=False, write_only=True)
     accepted = serializers.BooleanField(default=True, required=False, write_only=True)
 
@@ -46,6 +45,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_password(self, value):
         return make_password(value)
+
+    def validate_year(self, value):
+        try:
+            if not value:
+                return 0
+            if int(value) < 0:
+                raise serializers.ValidationError("You must supply a positive integer.")
+            return int(value)
+        except ValueError:
+            raise serializers.ValidationError("You must supply a positive integer.")
 
     def validate(self, data):
         first_name = data.get('first_name')
@@ -85,7 +94,6 @@ class UserSerializer(serializers.ModelSerializer):
         if hasattr(user, 'instructor'):
             instructor = user.instructor
             company = validated_data.get('company')
-            year = validated_data.get('year')
             if company is not None:
                 instructor.comapny = company
             if validated_data.get('year'):
