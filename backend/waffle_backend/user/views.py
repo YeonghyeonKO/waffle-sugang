@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from user.serializers import UserSerializer
-from user.models import ParticipantProfile
+from user.models import InstructorProfile, ParticipantProfile
 
 
 class UserViewSet(viewsets.GenericViewSet):

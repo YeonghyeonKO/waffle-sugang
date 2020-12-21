@@ -23,7 +23,7 @@ const Login = ({history}) => {
     <div className="login_page">
       <Segment placeholder>
         <h1>
-          와플 백엔드 과제 2 테스트 웹 페이지
+          와플스튜디오 수강신청
         </h1>
         <Form className="login_form" onSubmit={() => {
           api.login({username: username, password: password}).then((res) => {
